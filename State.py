@@ -154,10 +154,13 @@ class State(iState):
             playerPositions.remove(shape)
         return actions
 
-    def getPerimiter(self, shape):
-        perimiter = []
+    def getPerimeter(self, shape):
+        perimeter = []
         for tile in shape:
-            perimiter += list(set(self.getAdjacent(tile)) - set(perimiter))
+            for adj in self.getAdjacent(tile):
+                if adj not in shape:
+                    perimeter.append(adj)
+        return set(perimeter)
 
     def getPath(self, shape):
         return
@@ -339,20 +342,48 @@ class State(iState):
 if __name__ == '__main__':
     board = State()
     print(board)
-    board.board[(-1, 1, 0)] = 1
-    board.board[(-2, 1, 1)] = 1
-    board.board[(-1, 0, 1)] = 1
-    board.board[(-3, 1, 2)] = 1
-    print("\n")
+    board.board[(2, 0, -2)] = 1
+    board.board[(1, 1, -2)] = 1
+    board.board[(0, 2, -2)] = 1
+    board.board[(-1, 2, -1)] = 1
+    print("\n Shape!")
     print(board)
 
-    shape = board.getShape((-1, 1, 0))
-    print(shape)
-    newShape = board.flipAlong(shape, 0)
+    shape = board.getShape((1, 1, -2))
+    print("\n Flip Along Shape (y)!")
+    flipAlongShape = board.flipAlong(shape, 1)
     board.placeShape(shape, 0)
-    board.placeShape(newShape, 1)
+    board.placeShape(flipAlongShape, 1)
     print(board)
-    print(board.typeShape(newShape))
+    print(board.typeShape(flipAlongShape))
+
+    print("\n Flip Across Shape (y)!")
+    flipAcrossShape = board.flipAcross(shape, 1)
+    board.placeShape(flipAlongShape, 0)
+    board.placeShape(flipAcrossShape, 1)
+    print(board)    
+    print(board.typeShape(flipAcrossShape))
+
+    print("\n Rot Shape (1)!")
+    rotShape = board.rotate(shape, 1)
+    board.placeShape(flipAcrossShape, 0)
+    board.placeShape(rotShape, 1)
+    print(board)
+    print(board.typeShape(rotShape))
+
+    print("\n Rot Shape (-1)!")
+    rotShape2 = board.rotate(shape, -1)
+    board.placeShape(rotShape, 0)
+    board.placeShape(rotShape2, 1)
+    print(board)
+    print(board.typeShape(rotShape2))
+
+    print("\n Trans Shape (1,-1,0)!")
+    transShape = board.translate(shape, x = 1, y = -1)
+    board.placeShape(rotShape2, 0)
+    board.placeShape(transShape, 1)
+    print(board)
+    print(board.typeShape(transShape))
     """
     print(board.board.__contains__((-5, 0, 0)))
     print(State.getTilePostions(board, 1))
