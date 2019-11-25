@@ -1,5 +1,6 @@
 import copy
 import queue
+import collections
 
 
 class iState:
@@ -168,48 +169,72 @@ class State(iState):
         :param shape: list of locations
         :return: name of shape (index from 1 - 12)
         """
-        maxX, minX = max(shape)[0], min(shape)[0]
-        maxY, minY = max(shape)[1], min(shape)[1]
-        maxZ, minZ = max(shape)[2], min(shape)[2]
+        length = len(shape)
 
-        dim1 = [i[0] for i in shape]
-        dim2 = []
-        dim3 = []
+        dim1 = collections.Counter([i[0] for i in shape])
+        dim2 = collections.Counter([i[1] for i in shape])
+        dim3 = collections.Counter([i[2] for i in shape])
 
+        maxD = max(len(dim1), len(dim2), len(dim3))
+        minD = min(len(dim1), len(dim2), len(dim3))
 
-
-
-        if len(shape) == 1:
+        if length == 1:
             return 1
-        elif len(shape) == 2:
+        elif length == 2:
             return 2
-        elif len(shape) == 3:
-            dist = max(abs(shape[0][0] - shape[1][0]), abs(shape[0][1] - shape[1][1]), abs(shape[0][2] - shape[1][2]),
-                       abs(shape[0][0] - shape[2][0]), abs(shape[0][1] - shape[2][1]), abs(shape[0][2] - shape[2][2]),
-                       abs(shape[1][0] - shape[2][0]), abs(shape[1][1] - shape[2][1]), abs(shape[1][2] - shape[2][2]))
-            if dist == 2:
-                return 5
+        elif length == 3:
+            if maxD == 3:
+                return 3
+            elif minD == 1:
+                return 4
             else:
-                if shape[0][0] == shape[1][0] == shape[2][0] \
-                        or shape[0][1] == shape[1][1] == shape[2][1] \
-                        or shape[0][2] == shape[1][2] == shape[2][2]:
-                    return 4
+                return 5
+        elif length == 4:
+            if minD == 1:
+                return 12
+            elif len(dim1) == len(dim2) == len(dim3) == 3:
+                return 11
+            elif maxD == 4:
+                if len(dim1) == 2:
+                    if max([dim1[i] for i in dim1.elements()]) == 3:
+                        return 7
+                    else:
+                        return 9
+                elif len(dim2) == 2:
+                    if max([dim2[i] for i in dim2.elements()]) == 3:
+                        return 7
+                    else:
+                        return 9
                 else:
-                    return 3
-        elif len(shape) == 4:
-            dist = max(abs(shape[0][0] - shape[1][0]), abs(shape[0][1] - shape[1][1]), abs(shape[0][2] - shape[1][2]),
-                       abs(shape[0][0] - shape[2][0]), abs(shape[0][1] - shape[2][1]), abs(shape[0][2] - shape[2][2]),
-                       abs(shape[0][0] - shape[3][0]), abs(shape[0][1] - shape[3][1]), abs(shape[0][2] - shape[3][2]),
-                       abs(shape[1][0] - shape[2][0]), abs(shape[1][1] - shape[2][1]), abs(shape[1][2] - shape[2][2]),
-                       abs(shape[1][0] - shape[3][0]), abs(shape[1][1] - shape[3][1]), abs(shape[1][2] - shape[3][2]),
-                       abs(shape[2][0] - shape[3][0]), abs(shape[2][1] - shape[3][1]), abs(shape[2][2] - shape[3][2]))
-            if dist == 3:
-                if shape[0][0] == shape[1][0] == shape[2][0] == shape[3][0] \
-                        or shape[0][1] == shape[1][1] == shape[2][1] == shape[3][1] \
-                        or shape[0][2] == shape[1][2] == shape[2][2] == shape[3][2]:
-                    return 12
-
-        return
+                    if max([dim3[i] for i in dim3.elements()]) == 3:
+                        return 7
+                    else:
+                        return 9
+            else:
+                if len(dim1) == 2:
+                    if max([dim1[i] for i in dim1.elements()]) == 3:
+                        return 6
+                    else:
+                        if len(dim1) == len(dim2) == 2 or len(dim2) == len(dim3) == 2 or len(dim1) == len(dim3) == 2:
+                            return 10
+                        else:
+                            return 8
+                elif len(dim2) == 2:
+                    if max([dim2[i] for i in dim2.elements()]) == 3:
+                        return 6
+                    else:
+                        if len(dim1) == len(dim2) == 2 or len(dim2) == len(dim3) == 2 or len(dim1) == len(dim3) == 2:
+                            return 10
+                        else:
+                            return 8
+                elif len(dim3) == 2:
+                    if max([dim3[i] for i in dim3.elements()]) == 3:
+                        return 6
+                    else:
+                        if len(dim1) == len(dim2) == 2 or len(dim2) == len(dim3) == 2 or len(dim1) == len(dim3) == 2:
+                            return 10
+                        else:
+                            return 8
 
     def flip(self, shape, dimension):
         """
@@ -266,19 +291,20 @@ class State(iState):
 if __name__ == '__main__':
     board = State()
     print(board)
-    board.board[(2, 0, -2)] = 1
-    board.board[(1, 1, -2)] = 1
-    board.board[(0, 2, -2)] = 1
-    board.board[(-1, 2, -1)] = 1
+    board.board[(-1, 1, 0)] = 1
+    board.board[(-2, 1, 1)] = 1
+    board.board[(-1, 0, 1)] = 1
+    board.board[(-3, 1, 2)] = 1
     print("\n")
     print(board)
 
-    shape = board.getShape((1, 1, -2))
+    shape = board.getShape((-1, 1, 0))
     print(shape)
     newShape = board.flip(shape, 0)
     board.placeShape(shape, 0)
     board.placeShape(newShape, 1)
     print(board)
+    print(board.typeShape(newShape))
     """
     print(board.board.__contains__((-5, 0, 0)))
     print(State.getTilePostions(board, 1))
