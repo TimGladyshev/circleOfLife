@@ -236,12 +236,14 @@ class State(iState):
                         else:
                             return 8
 
-    def flip(self, shape, dimension):
+
+    def flipAlong(self, shape, dimension):
         """
-        flips ya shape around desired axis bruv
+        flips ya shape along desired axis bruv
+        (in normal 2 dimensions we might flip across the y-axis which is the same as flipping along the x-axis and vice versa)
         :param shape: list of points
         :param dimension: 0 - x, 1 - y, 2 - z
-        :return: set of points describing shape
+        :return: set of points describing flipped shape
         """
         newShape = []
         for tile in shape:
@@ -253,6 +255,52 @@ class State(iState):
 
         return set(newShape)
 
+
+    def rotate(self, shape, angle):
+        """
+        rotates ya shape around by a desired angle bruv
+        :param shape: list of points
+        :param dimension: 1 - equivalent of 60 degrees counterclockwise, 2 - equivalent of 120 degrees counterclockwise, etc...
+        :return: set of points describing rotated shape
+        """
+        newShape = []
+        for tile in shape:
+            new_tile = [None, None, None]
+            new_tile[0] = (-1)**(angle % 2)*tile[angle % 3]
+            new_tile[1] = (-1)**(angle % 2)*tile[(1 + angle) % 3]
+            new_tile[2] = (-1)**(angle % 2)*tile[(2 + angle) % 3]
+            newShape.append(tuple(new_tile))
+
+        return set(newShape)
+
+    def translate(self, shape, x = 0, y = 0, z = 0):
+        """
+        translates ya shape in a desired direction bruv
+        :param shape: list of points
+        :param x: moves this many spaces parallel to the x-axis, increasing y and decreasing z (for positive number)
+        :param y: moves this many spaces parallel to the y-axis, increasing x and decreasing z (for positive number)
+        :param z: moves this many spaces parallel to the z-axis, increasing x and decreasing y (for positive number)
+        :return: set of points describing translated shape
+        """
+        newShape = []
+        for tile in shape:
+            new_tile = [None, None, None]
+            new_tile[0] = tile[0] + y + z
+            new_tile[1] = tile[1] + x - z
+            new_tile[2] = tile[2] - x - y
+            if self.board.__contains__(tuple(new_tile)):
+                newShape.append(tuple(new_tile))
+
+        return set(newShape)
+
+    def flipAcross(self, shape, dimension):
+        """
+        flips ya shape across desired axis bruv
+        :param shape: list of points
+        :param dimension: 0 - x, 1 - y, 2 - z
+        :return: set of points describing flipped shape
+        """
+        return board.rotate(board.flipAlong(shape, dimension), 3)
 
 
     def takeAction(self, action):
@@ -300,7 +348,7 @@ if __name__ == '__main__':
 
     shape = board.getShape((-1, 1, 0))
     print(shape)
-    newShape = board.flip(shape, 0)
+    newShape = board.flipAlong(shape, 0)
     board.placeShape(shape, 0)
     board.placeShape(newShape, 1)
     print(board)
