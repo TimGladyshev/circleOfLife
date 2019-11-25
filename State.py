@@ -141,7 +141,7 @@ class State(iState):
 
     def getActions(self):
         """
-        Remeber to add getPerimiter()
+        Remeber to add getPerimeter()
         :return:
         """
         actions = self.getTilePostions(0)
@@ -312,7 +312,7 @@ class State(iState):
         nextTurn = self.turn % 2 + 1
         evolvedShape = self.getShape([], action)
         evolvedShapeName = self.typeShape(evolvedShape)
-        perimeter = self.getPerimiter(evolvedShape)
+        perimeter = self.getPerimeter(evolvedShape)
         captured = []
         while perimeter:
             if self.board[perimeter[0]] == nextTurn:
@@ -384,6 +384,13 @@ if __name__ == '__main__':
     board.placeShape(transShape, 1)
     print(board)
     print(board.typeShape(transShape))
+
+    print("\n Perimeter Trans Shape (1,-1,0)!")
+    perimShape = board.getPerimeter(transShape)
+    board.placeShape(transShape, 0)
+    board.placeShape(perimShape, 1)
+    print(board)
+    print(board.typeShape(perimShape))
     """
     print(board.board.__contains__((-5, 0, 0)))
     print(State.getTilePostions(board, 1))
