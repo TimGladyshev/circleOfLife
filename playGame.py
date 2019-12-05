@@ -1,11 +1,18 @@
+import math
+
 import monte_carlo_tree_searchV1
 import STATE
+import json
+
 
 def print_board(board):
     pass
 
 def play_game():
-    tree = monte_carlo_tree_searchV1.MCTS()
+
+    # raise RuntimeError("Bruv you were fucking with this, don't run it")
+
+    tree = monte_carlo_tree_searchV1.MCTS(save_data=True, alpha=math.sqrt(2))
     board = STATE.State()
     print(board)
 
@@ -17,6 +24,11 @@ def play_game():
         print(len(board.getActions()))
 
         x_y_z = input("enter x,y,z:\n")
+
+        if x_y_z == "e":
+            tree.save_data()
+            break
+
         x, y, z = map(int, x_y_z.split(","))
 
         if (x, y, z) not in board.getActions():
@@ -34,12 +46,13 @@ def play_game():
         if board.terminal:
             break
 
-        for i in range(100):
+        for i in range(25):
             tree.do_iteration(board)
         board = tree.find_best_child(board)
 
         print(board)
         if board.terminal:
+            tree.save_data()
             break
 
 
