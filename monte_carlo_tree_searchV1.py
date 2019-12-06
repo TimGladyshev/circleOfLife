@@ -30,11 +30,13 @@ class MCTS:
     """
 
     def __init__(self, save_data=False, alpha=1, player=2, file1='Children.txt', file2='num_visited.txt',
-                 file3='rewards.txt'):
+                 file3='rewards.txt', sim_num=50):
 
         self.file1 = file1
         self.file2 = file2
         self.file3 = file3
+
+        self.sim_num = sim_num
 
         if save_data == False:
             self.VisitCount = defaultdict(int)
@@ -107,9 +109,9 @@ class MCTS:
         leaf = path[-1]
         self.expand(leaf)
         reward = 0
-        for i in range(25):
+        for i in range(self.sim_num):
             reward += self.simulate(leaf)
-        reward /= 25
+        reward /= self.sim_num
         self.back_propogate(path, reward)
 
     def simulate(self, node):

@@ -3,7 +3,6 @@ import random
 import STATE
 from collections import defaultdict
 import os
-import numpy as np
 
 class HeuristicFunctions:
 
@@ -34,7 +33,37 @@ class HeuristicFunctions:
                 p2_in_cloud = p2_in_cloud - p2_shape
             p1_positions = p1_positions - shape
 
-        sigmoid = 1/(1+np.exp(-1 * (2 * danger_to_shapes + attack_points)))
+        sigmoid = 1/(1+ math.exp(-1 * (2 * danger_to_shapes + attack_points)))
+        return sigmoid * 2 - 1
+
+    def heur2(self, node, player):
+        """
+        :param node: STATE.State() node
+        :return: A value between -1 and 1
+        """
+        p1_positions = node.getTilePostions(player)
+        p2_positions = node.getTilePostions(player % 2 + 1)
+
+        danger_to_shapes = 0
+        attack_points = 0
+
+        while p1_positions:
+            shape = node.getShape(p1_positions.pop())
+            shape_name = node.typeShape(shape)
+            cloud = node.getPerimeter(shape)
+            cloud = cloud | node.getPerimeter(shape | cloud)
+            p2_in_cloud = cloud.intersection(p2_positions)
+            while p2_in_cloud:
+                p2_shape = node.getShape(cloud.pop())
+                p2_shape_name = node.typeShape(p2_shape)
+                if p2_shape_name in STATE.SHAPE_SUBSETS[shape_name % 12 + 1]:
+                    danger_to_shapes += len(p2_shape)
+                if shape_name in STATE.SHAPE_SUBSETS[p2_shape_name % 12 + 1]:
+                    attack_points += len(shape)
+                p2_in_cloud = p2_in_cloud - p2_shape
+            p1_positions = p1_positions - shape
+
+        sigmoid = 1/(1+ math.exp(-1 * (danger_to_shapes + 2 * attack_points)))
         return sigmoid * 2 - 1
 
 
@@ -63,12 +92,15 @@ class MCTS:
     """
 
     def __init__(self, save_data=False, C=math.sqrt(2), alpha = .5, player=2, file1='V2children.txt', file2='V2num_visited.txt',
-                 file3='V2rewards.txt', file4='V2heur.txt'):
+                 file3='V2rewards.txt', file4='V2heur.txt', heur_num=1, sim_num=50):
 
         self.file1 = file1
         self.file2 = file2
         self.file3 = file3
         self.file4 = file4
+
+        self.heur_num=heur_num
+        self.sim_num=sim_num
 
         if save_data == False:
             self.VisitCount = defaultdict(int)
@@ -133,7 +165,7 @@ class MCTS:
         ln_parent_n = math.log(self.VisitCount[node])
 
         def UCT_with_heur(n):
-            heur = (1 - self.alpha) * (self.Rewards[n] / self.VisitCount[n]) + self.alpha * (self.Heur[n])
+            heur = (1 - self.alpha) * (self.Rewards[n] / self.VisitCount[n]) + self.alpha * (self.Heur[n]/self.VisitCount[n])
             return heur + self.C * math.sqrt(ln_parent_n / self.VisitCount[n])
 
         return max(self.Children[node], key=UCT_with_heur)
@@ -149,9 +181,9 @@ class MCTS:
         self.expand(leaf)
         reward = 0
         heur = self.find_heur(leaf)
-        for i in range(25):
+        for i in range(self.sim_num):
             reward += self.simulate(leaf)
-        reward /= 25
+        reward /= self.sim_num
         self.back_propogate(path, reward, heur)
 
     def simulate(self, node):
@@ -166,7 +198,12 @@ class MCTS:
             node = node.takeAction(random.choice(_tuple))
 
     def find_heur(self, node):
-        return HeuristicFunctions.heur1(self, node, self.player)
+        if self.heur_num == 1:
+            return HeuristicFunctions.heur1(node, node, self.player)
+        elif self.heur_num == 2:
+            return HeuristicFunctions.heur2(node, self.player)
+        else:
+            raise RuntimeError("this heuristic hasn't been made yet ya GOON")
 
     def back_propogate(self, path, reward, heur):
         length = len(path)
