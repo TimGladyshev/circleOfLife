@@ -16,9 +16,10 @@ def play_game():
         if i % 1000 == 0:
             tree.save_data()
         tree.do_iteration(board)
-        print("----------------------------------iteration running now", end=' ')
-        print(i)
-        print(board.find_best_child)
+        if i % 100 == 0:
+            print("----------------------------------iteration running now", end=' ')
+            print(i)
+            print(tree.find_best_child)
 
     print("done ya lucky bastard")
 
