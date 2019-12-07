@@ -21,3 +21,6 @@ def play_game():
         print(board.find_best_child)
 
     print("done ya lucky bastard")
+
+if __name__ == "__main__":
+    play_game()
