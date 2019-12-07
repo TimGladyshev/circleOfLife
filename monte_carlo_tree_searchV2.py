@@ -199,9 +199,9 @@ class MCTS:
 
     def find_heur(self, node):
         if self.heur_num == 1:
-            return HeuristicFunctions.heur1(node, node, self.player)
+            return HeuristicFunctions.heur1(self, node, self.player)
         elif self.heur_num == 2:
-            return HeuristicFunctions.heur2(node, self.player)
+            return HeuristicFunctions.heur2(self, node, self.player)
         else:
             raise RuntimeError("this heuristic hasn't been made yet ya GOON")
 
