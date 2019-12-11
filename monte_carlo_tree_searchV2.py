@@ -66,6 +66,80 @@ class HeuristicFunctions:
         sigmoid = 1/(1+ math.exp(-1 * (danger_to_shapes + 2 * attack_points)))
         return sigmoid * 2 - 1
 
+    def heur3(self, node, player):
+        """
+        :param node: STATE.State() node
+        :return: A value between -1 and 1
+        """
+        p1_positions = node.getTilePostions(player)
+        p2_positions = node.getTilePostions(player % 2 + 1)
+
+        danger_to_shapes = 0
+        attack_points = 0
+
+        while p1_positions:
+            shape = node.getShape(p1_positions.pop())
+            shape_name = node.typeShape(shape)
+            cloud = node.getPerimeter(shape)
+            cloud = cloud | node.getPerimeter(shape | cloud)
+            p2_in_cloud = cloud.intersection(p2_positions)
+            while p2_in_cloud:
+                p2_shape = node.getShape(cloud.pop())
+                p2_shape_name = node.typeShape(p2_shape)
+                if p2_shape_name in STATE.SHAPE_SUBSETS[shape_name % 12 + 1]:
+                    danger_to_shapes += len(p2_shape)
+                if shape_name in STATE.SHAPE_SUBSETS[p2_shape_name % 12 + 1]:
+                    attack_points += len(shape)
+                p2_in_cloud = p2_in_cloud - p2_shape
+            p1_positions = p1_positions - shape
+
+        return danger_to_shapes + 2 * attack_points
+
+    def heur4(self, node, player):
+        """
+        in progress - idea was to give future perception, but this favors upgrading the shape
+        v3 heuristic
+        for each shape in game, finds shapes in adjacent or 1-away spaces (min distance to take), then
+        for each shape the shape of interest can become, finds if opponent's shape is in the subset of the conquering
+        shape. attack points if shape of interest is player's, danger to shape points otherwise. The idea was to use
+        sigmoid, but perhaps this is wrong. Score introduction?
+
+        :param node: STATE.State() node
+        :return: A value between -1 and 1
+        """
+
+        #dynamic programming?
+        new_board = node.board.copy()
+
+        p1_positions = node.getTilePostions(player)
+        p2_positions = node.getTilePostions(player % 2 + 1)
+
+        danger_to_shapes = 0
+        attack_points = 0
+
+        while p1_positions:
+            shape = node.getShape(p1_positions.pop())
+            shape_name = node.typeShape(shape)
+            cloud = node.getPerimeter(shape)
+            cloud = cloud | node.getPerimeter(shape | cloud)
+            p2_in_cloud = cloud.intersection(p2_positions)
+            while p2_in_cloud:
+                p2_shape = node.getShape(cloud.pop())
+                p2_shape_name = node.typeShape(p2_shape)
+                shape_futures = set().add(shape_name) | set(STATE.SHAPE_POTENTIAL[shape_name])
+                #diminishing_returns = 16
+                for future in shape_futures:
+                    if p2_shape_name in STATE.SHAPE_SUBSETS[future % 12 + 1]:
+                        danger_to_shapes += len(p2_shape)
+                    p2_shape_futures = set().add(p2_shape_name) | set(STATE.SHAPE_POTENTIAL[p2_shape_name])
+                    for p2_future in p2_shape_futures:
+                        if shape_name in STATE.SHAPE_SUBSETS[p2_future % 12 + 1]:
+                            attack_points += len(shape)
+                    #diminishing_returns //= 2
+                p2_in_cloud = p2_in_cloud - p2_shape
+            p1_positions = p1_positions - shape
+
+        return attack_points - danger_to_shapes
 
 class MCTS:
     """
@@ -298,7 +372,7 @@ class MCTS:
         heur_line = heur_file.readline()
         while heur_line:
             heur_line = heur_line.split("  ")
-            state_of_being = STATE.State(tupleKey=eval(vis_line[0]))
+            state_of_being = STATE.State(tupleKey=eval(heur_line[0]))
             num_heur = eval(heur_line[1])
             self.Heur[state_of_being] = num_heur
             heur_line = heur_file.readline()
