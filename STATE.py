@@ -118,6 +118,17 @@ class State(iState):
         else:
             return NotImplemented
 
+    def __cmp__(self, other):
+        if isinstance(other, State):
+            hash_a = self.__hash__()
+            hash_b = other.__hash__()
+            if hash_a < hash_b:
+                return -1
+            elif hash_a == hash_b:
+                return 0
+            else:
+                return 1
+
     def __str__(self):
         printable = ""
         keys = list(sorted(self.board.keys()))

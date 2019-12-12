@@ -1,13 +1,19 @@
 import STATE
 import monte_carlo_tree_searchV2
+import operator
 DEPTH = 2
 
-def payoff(State, depth, player):
-    if depth == DEPTH or State.isTerminal():
-        return monte_carlo_tree_searchV2.HeuristicFunctions.heur3( State, player)
-    else:
-        payoffs = list(payoff(State.takeAction(action), depth + 1, player % 2 + 1) for action in State.getActions())
-        if(State.turn == player):
-            return max(payoffs)
+def payoff(board_instance, depth, player):
+    if board_instance.is_terminal():
+        if player == 1:
+            return board_instance.get_reward() * 100
         else:
-            return min(payoffs)
+            return board_instance.get_reward_adversarial() * 100
+    elif depth == DEPTH:
+        return (monte_carlo_tree_searchV2.HeuristicFunctions.heur3(board_instance, player), board_instance)
+    else:
+        payoffs = [payoff(board_instance.takeAction(action), depth + 1, player) for action in board_instance.getActions()]
+        if(board_instance.turn == player):
+            return max(payoffs, key=lambda x: x[0])[0], board_instance
+        else:
+            return min(payoffs, key=lambda x: x[0])[0], board_instance

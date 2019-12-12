@@ -4,7 +4,7 @@ import STATE
 from collections import defaultdict
 import os
 import pickle
-import marshal_dump
+import multiprocessing as mp
 
 
 class HeuristicFunctions:
@@ -258,9 +258,15 @@ class MCTS:
         self.expand(leaf)
         reward = 0
         heur = self.find_heur(leaf)
+        """
+        pool = mp.Pool(processes=mp.cpu_count())
+        results = [pool.apply(self.simulate, args=(STATE.State(tupleKey=leaf.key),)) for i in range(self.sim_num)]
+        reward = float(sum(results)) / len(results)
+        """
         for i in range(self.sim_num):
             reward += self.simulate(leaf)
-        reward /= self.sim_num
+        reward = float(reward) / self.sim_num
+
         self.back_propogate(path, reward, heur)
 
     def simulate(self, node):

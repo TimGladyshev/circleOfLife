@@ -1,4 +1,5 @@
 import math
+import operator
 import random
 
 import monte_carlo_tree_searchV2
@@ -8,7 +9,7 @@ import multiprocessing as mp
 
 
 def play_game():
-    pool = mp.Pool(processes=mp.cpu_count())
+    pool = mp.Pool(processes=mp.cpu_count() - 1)
     tree = monte_carlo_tree_searchV2.MCTS(save_data=True, C=.5, alpha=.5, player=1,
                                           file1='pkl_sim50_heur1_children.marshal', file2='pkl_sim50_heur1_num_visit.marshal',
                                           file3='pkl_sim50_heur1_rewards.marshal', file4='pkl_sim50_heur1_heur.marshal', sim_num=1)
@@ -21,13 +22,12 @@ def play_game():
         if seen == False:
             best_move = float("-inf")
             best_action = None
-            for action in board.getActions():
-                new_board = board.takeAction(action)
-                move = MiniMaxV2.payoff(new_board, 0, board.turn % 2 + 1)
-                if move > best_move:
-                    best_move = move
-                    best_action = action
-            board = board.takeAction(best_action)
+
+            results = [pool.apply_async(MiniMaxV2.payoff, args=(board.takeAction(i), 0, board.turn)) for i in board.getActions()]
+            output = [p.get() for p in results]
+            new_board = max(output, key=lambda x: x[0])[1]
+            action = new_board.getTilePostions(board.turn) - board.getTilePostions(board.turn)
+            board = board.takeAction(action.pop())
             seen = True
         else:
             for i in range(50):
