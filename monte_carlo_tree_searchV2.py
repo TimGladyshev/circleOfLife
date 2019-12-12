@@ -3,10 +3,13 @@ import random
 import STATE
 from collections import defaultdict
 import os
+import pickle
+import marshal_dump
+
 
 class HeuristicFunctions:
 
-    def heur1(self, node, player):
+    def heur1( node, player):
         """
         :param node: STATE.State() node
         :return: A value between -1 and 1
@@ -36,7 +39,7 @@ class HeuristicFunctions:
         sigmoid = 1/(1+ math.exp(-1 * (2 * danger_to_shapes + attack_points)))
         return sigmoid * 2 - 1
 
-    def heur2(self, node, player):
+    def heur2( node, player):
         """
         :param node: STATE.State() node
         :return: A value between -1 and 1
@@ -66,7 +69,7 @@ class HeuristicFunctions:
         sigmoid = 1/(1+ math.exp(-1 * (danger_to_shapes + 2 * attack_points)))
         return sigmoid * 2 - 1
 
-    def heur3(self, node, player):
+    def heur3(node, player):
         """
         :param node: STATE.State() node
         :return: A value between -1 and 1
@@ -186,13 +189,13 @@ class MCTS:
             file2_info = os.stat(file2)
             file3_info = os.stat(file3)
             file4_info = os.stat(file4)
-            if file1_info.st_size + file2_info.st_size + file3_info.st_size + file4_info.st_size > 1000000000:
+            if file1_info.st_size + file2_info.st_size + file3_info.st_size + file4_info.st_size > 2000000000:
                 raise RuntimeError("file sizes over a gig my dood")
             self.VisitCount = defaultdict(int)
             self.Rewards = defaultdict(float)
             self.Children = dict()
             self.Heur = defaultdict(float)
-            self.load()
+            self.load_pickle()
 
         self.player = player
         self.alpha = alpha
@@ -273,9 +276,9 @@ class MCTS:
 
     def find_heur(self, node):
         if self.heur_num == 1:
-            return HeuristicFunctions.heur1(self, node, self.player)
+            return HeuristicFunctions.heur1( node, self.player)
         elif self.heur_num == 2:
-            return HeuristicFunctions.heur2(self, node, self.player)
+            return HeuristicFunctions.heur2( node, self.player)
         else:
             raise RuntimeError("this heuristic hasn't been made yet ya GOON")
 
@@ -377,3 +380,23 @@ class MCTS:
             self.Heur[state_of_being] = num_heur
             heur_line = heur_file.readline()
         vis_file.close()
+
+    def load_pickle(self):
+        with open(self.file1, 'rb') as child:
+            self.Children = pickle.load(child)
+        with open(self.file2, 'rb') as reward:
+            self.Rewards = pickle.load(reward)
+        with open(self.file3, 'rb') as numv:
+            self.VisitCount = pickle.load(numv)
+        with open(self.file4, 'rb') as heur:
+            self.Heur = pickle.load(heur)
+
+    def save_data_pickle(self):
+        with open(self.file1, 'wb') as children_dump:
+            pickle.dump(self.Children, children_dump)
+        with open(self.file2, 'wb') as reward_dump:
+            pickle.dump(self.Rewards, reward_dump)
+        with open(self.file3, 'wb') as vis_dump:
+            pickle.dump(self.VisitCount, vis_dump)
+        with open(self.file4, 'wb') as heur_dump:
+            pickle.dump(self.Heur, heur_dump)

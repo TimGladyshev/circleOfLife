@@ -56,6 +56,7 @@ class iState:
 class State(iState):
 
     def __init__(self, boardGiven={}, player=1, score1=0, score2=0, tupleKey = None):
+        # this happens only when read in
         if tupleKey != None:
             self.board = {}
             for i in range(len(POINTLIST)):
@@ -65,6 +66,7 @@ class State(iState):
             self.p2Score = tupleKey[len(POINTLIST) + 2]
             self.terminal = self.isTerminal()
             self.key = tupleKey
+        # new board
         elif len(boardGiven) == 0:
             self.makeNewBoard()
             self.p1Score = 0
@@ -72,6 +74,7 @@ class State(iState):
             self.turn = 1
             self.terminal = False
             self.key = None
+        # take action
         else:
             self.board = boardGiven
             self.p1Score = score1

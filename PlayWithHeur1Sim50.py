@@ -4,12 +4,14 @@ import random
 import monte_carlo_tree_searchV2
 import STATE
 import MiniMaxV2
+import multiprocessing as mp
 
 
 def play_game():
+    pool = mp.Pool(processes=mp.cpu_count())
     tree = monte_carlo_tree_searchV2.MCTS(save_data=True, C=.5, alpha=.5, player=1,
-                                          file1='v2_sim50_heur1_children.txt', file2='v2_sim50_heur1_num_visit.txt',
-                                          file3='v2_sim50_heur1_rewards.txt', file4='v2_sim50_heur1_heur.txt', sim_num=1)
+                                          file1='pkl_sim50_heur1_children.marshal', file2='pkl_sim50_heur1_num_visit.marshal',
+                                          file3='pkl_sim50_heur1_rewards.marshal', file4='pkl_sim50_heur1_heur.marshal', sim_num=1)
     board = STATE.State()
     print(board)
     seen = True
@@ -17,7 +19,7 @@ def play_game():
 
     while True:
         if seen == False:
-            best_move = int("-inf")
+            best_move = float("-inf")
             best_action = None
             for action in board.getActions():
                 new_board = board.takeAction(action)
@@ -34,7 +36,7 @@ def play_game():
 
         print(board)
         if board.terminal:
-            tree.save_data()
+            tree.save_data_pickle()
             break
 
         print("your move --------- length tree->", end=" ")
@@ -45,7 +47,7 @@ def play_game():
         x_y_z = input("enter x,y,z:\n")
 
         if x_y_z == "e":
-            tree.save_data()
+            tree.save_data_pickle()
             break
 
         x, y, z = map(int, x_y_z.split(","))
