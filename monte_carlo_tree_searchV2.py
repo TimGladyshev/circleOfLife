@@ -98,7 +98,7 @@ class HeuristicFunctions:
 
         return danger_to_shapes + 2 * attack_points
 
-    def heur4(self, node, player):
+    def heur4(node, player):
         """
         in progress - idea was to give future perception, but this favors upgrading the shape
         v3 heuristic
@@ -111,14 +111,26 @@ class HeuristicFunctions:
         :return: A value between -1 and 1
         """
 
-        #dynamic programming?
-        new_board = node.board.copy()
+        if node.is_terminal():
+            if player == 1:
+                return node.get_reward() * 1000
+            else:
+                return node.get_reward_adversarial() * 1000
 
         p1_positions = node.getTilePostions(player)
         p2_positions = node.getTilePostions(player % 2 + 1)
+        empty_positions = node.getTilePostions(0)
+        actions = node.getActions()
 
         danger_to_shapes = 0
         attack_points = 0
+
+        if player == 1:
+            player_score = node.p1Score
+            op_score = node.p2Score
+        else:
+            player_score = node.p2Score
+            op_score = node.p1Score
 
         while p1_positions:
             shape = node.getShape(p1_positions.pop())
@@ -126,23 +138,32 @@ class HeuristicFunctions:
             cloud = node.getPerimeter(shape)
             cloud = cloud | node.getPerimeter(shape | cloud)
             p2_in_cloud = cloud.intersection(p2_positions)
+
             while p2_in_cloud:
-                p2_shape = node.getShape(cloud.pop())
+                p2_shape = node.getShape(p2_in_cloud.pop())
                 p2_shape_name = node.typeShape(p2_shape)
-                shape_futures = set().add(shape_name) | set(STATE.SHAPE_POTENTIAL[shape_name])
-                #diminishing_returns = 16
+                shape_futures = set(STATE.SHAPE_POTENTIAL[shape_name])
+                p2_shape_futures = set(STATE.SHAPE_POTENTIAL[p2_shape_name])
+
+                if p2_shape_name in STATE.SHAPE_SUBSETS[shape_name % 12 + 1]:
+                    inter_per = node.getPerimeter(shape).intersection(node.getPerimeter(p2_shape))
+                    inter_per = inter_per - actions
+                    if len(inter_per) > 0:
+                        danger_to_shapes = danger_to_shapes + 10 * len(p2_shape)
+                    else:
+                        danger_to_shapes = danger_to_shapes + 5 * len(p2_shape)
                 for future in shape_futures:
                     if p2_shape_name in STATE.SHAPE_SUBSETS[future % 12 + 1]:
-                        danger_to_shapes += len(p2_shape)
-                    p2_shape_futures = set().add(p2_shape_name) | set(STATE.SHAPE_POTENTIAL[p2_shape_name])
-                    for p2_future in p2_shape_futures:
-                        if shape_name in STATE.SHAPE_SUBSETS[p2_future % 12 + 1]:
-                            attack_points += len(shape)
-                    #diminishing_returns //= 2
+                        danger_to_shapes += 1
+                if shape_name in STATE.SHAPE_SUBSETS[p2_shape_name % 12 + 1]:
+                    attack_points = attack_points + 5 * len(shape)
+                for f in p2_shape_futures:
+                    if shape_name in STATE.SHAPE_SUBSETS[f % 12 + 1]:
+                        attack_points += 1
                 p2_in_cloud = p2_in_cloud - p2_shape
             p1_positions = p1_positions - shape
 
-        return attack_points - danger_to_shapes
+        return 2 * attack_points * (1 + player_score) - danger_to_shapes * (1 + op_score)
 
 class MCTS:
     """
@@ -219,9 +240,9 @@ class MCTS:
 
         return max(self.Children[node], key=scoreNode)
 
-    def find_a_path(self, node):
+    def find_a_path(self, node, path_given):
         # NODE = node
-        path = []
+        path = path_given.copy()
         while True:
             path.append(node)
             if node not in self.Children or node.terminal:
@@ -252,8 +273,8 @@ class MCTS:
             return
         self.Children[node] = node.find_successors()
 
-    def do_iteration(self, node):
-        path = self.find_a_path(node)
+    def do_iteration(self, node, path_given):
+        path = self.find_a_path(node, path_given)
         leaf = path[-1]
         self.expand(leaf)
         reward = 0

@@ -40,13 +40,14 @@ def play_game(log_file_p1, log_file_p2, game_log):
         tree1.save_data_pickle()
         tree2.save_data_pickle()
         num_moves = 0
+        path_given = []
+        path_given.append(board)
 
         while True:
             for i in range(25):
-                tree1.do_iteration(board)
-            tree2.expand(board)
+                tree1.do_iteration(board, path_given)
             board = tree1.find_best_child(board)
-            tree2.expand(board)
+            path_given.append(board)
             num_moves += 1
             with open(game_log, 'a') as gl:
                 gl.write(board.__str__())
@@ -107,10 +108,9 @@ def play_game(log_file_p1, log_file_p2, game_log):
                 break
 
             for i in range(25):
-                tree2.do_iteration(board)
-            tree1.expand(board)
+                tree2.do_iteration(board, path_given)
             board = tree2.find_best_child(board)
-            tree1.expand(board)
+            path_given.append(board)
             num_moves += 1
             with open(game_log, 'a') as gl:
                 gl.write(board.__str__())

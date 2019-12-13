@@ -21,7 +21,7 @@ POINTLIST_FR5 = [(0, 4, -4), (-1, 4, -3), (-2, 4, -2), (-3, 4, -1), (-4, 4, 0), 
 POINTLISTS = [POINTLIST, POINTLIST_R1, POINTLIST_R2, POINTLIST_R3, POINTLIST_R4, POINTLIST_R5, POINTLIST_F, POINTLIST_FR1, POINTLIST_FR2, POINTLIST_FR3, POINTLIST_FR4, POINTLIST_FR5]
 
 SHAPE_SUBSETS = {12:{1, 2, 4}, 11:{1,2,3}, 10:{1,2, 3}, 9:{1, 2, 3}, 8:{1, 2, 3}, 7:{1, 2, 3, 4}, 6:{1, 2, 3, 4, 5}, 5:{1, 2}, 4:{1, 2}, 3:{1, 2}, 2:{1}, 1:{}}
-SHAPE_POTENTIAL = {1:{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, 2:{3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, 3:{6, 7, 8, 9, 10, 11}, 4:{6, 7, 12}, 5:{6, 10}}
+SHAPE_POTENTIAL = {1:{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, 2:{3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, 3:{6, 7, 8, 9, 10, 11}, 4:{6, 7, 12}, 5:{6, 10}, 6:{}, 7:{}, 8:{}, 9:{}, 10:{}, 11:{}, 12:{}}
 
 class iState:
 
@@ -509,6 +509,16 @@ if __name__ == '__main__':
     # print(Board)
     # print(Board.isTerminal())
     # print(sys.getsizeof(Board.board))
+
+    Board = Board.takeAction(random.choice(tuple(Board.getActions())))
+
+
+    for i in range(len(POINTLISTS)):
+        print(i)
+        values = tuple(Board.board[i] for i in POINTLISTS[i])
+        print(values)
+
+
     Board = Board.takeAction((-1,3,-2))
 
     Board2 = Board.takeAction(random.choice(tuple(Board.getActions())))
